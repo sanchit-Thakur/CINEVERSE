@@ -3,11 +3,17 @@ import { addToList, isInList, showToast } from '../utils/storage.js';
 import { navigate } from '../utils/router.js';
 import { addToContinueWatching } from '../utils/continue-watching.js';
 
-// Free embed sources for movies and TV
-const EMBED_SOURCES = [
-  { name: 'Server 1', movie: (id) => `https://vidsrc.xyz/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
-  { name: 'Server 2', movie: (id) => `https://vidsrc.to/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.to/embed/tv/${id}/${s}/${e}` },
-  { name: 'Server 3', movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`, tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` },
+// Multiple streaming servers & fallbacks for movie and TV playback
+const BASE_SERVERS = [
+  { id: 'vidsrc-cc', name: 'Server 1 (VidSrc CC)', type: 'iframe', movie: (id) => `https://vidsrc.cc/v2/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-pro', name: 'Server 2 (VidSrc Pro)', type: 'iframe', movie: (id) => `https://vidsrc.pro/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-vip', name: 'Server 3 (VidSrc VIP)', type: 'iframe', movie: (id) => `https://vidsrc.vip/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.vip/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-in', name: 'Server 4 (VidSrc IN)', type: 'iframe', movie: (id) => `https://vidsrc.in/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.in/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-xyz', name: 'Server 5 (VidSrc XYZ)', type: 'iframe', movie: (id) => `https://vidsrc.xyz/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
+  { id: 'embed-su', name: 'Server 6 (Embed SU)', type: 'iframe', movie: (id) => `https://embed.su/embed/movie/${id}`, tv: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
+  { id: 'autoembed', name: 'Server 7 (AutoEmbed)', type: 'iframe', movie: (id) => `https://player.autoembed.cc/embed/movie/${id}`, tv: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
+  { id: 'smashy', name: 'Server 8 (Smashy)', type: 'iframe', movie: (id) => `https://player.smashy.stream/movie/${id}`, tv: (id, s, e) => `https://player.smashy.stream/tv/${id}?s=${s}&e=${e}` },
+  { id: 'multiembed', name: 'Server 9 (MultiEmbed)', type: 'iframe', movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`, tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` },
 ];
 
 export async function renderPlayer(container, params) {
@@ -27,7 +33,7 @@ export async function renderPlayer(container, params) {
   try {
     const data = await tmdb.details(id, type);
     const title = data.title || data.name;
-    const currentSource = 0;
+    const trailerKey = data.videos ? tmdb.getTrailerKey(data.videos) : null;
 
     // Save to Continue Watching
     addToContinueWatching({
@@ -69,13 +75,40 @@ export async function renderPlayer(container, params) {
       }
     }
 
-    const embedUrl = type === 'tv'
-      ? EMBED_SOURCES[currentSource].tv(id, season, episode)
-      : EMBED_SOURCES[currentSource].movie(id);
+    // Build complete server list including Trailer & Direct HTML5 Stream fallbacks
+    const sources = [...BASE_SERVERS];
 
-    const serverBtns = EMBED_SOURCES.map((s, i) =>
-      `<button class="server-btn ${i === currentSource ? 'active' : ''}" data-index="${i}">${s.name}</button>`
+    if (trailerKey) {
+      sources.push({
+        id: 'trailer',
+        name: '🎬 Official Trailer (YouTube)',
+        type: 'iframe',
+        movie: () => `https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`,
+        tv: () => `https://www.youtube-nocookie.com/embed/${trailerKey}?autoplay=1&controls=1&rel=0`
+      });
+    }
+
+    sources.push({
+      id: 'demo-stream',
+      name: '⚡ Direct Demo Stream (HTML5)',
+      type: 'html5',
+      movie: () => `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4`,
+      tv: () => `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4`
+    });
+
+    const activeIndex = 0;
+    const initialSource = sources[activeIndex];
+    const initialUrl = type === 'tv'
+      ? initialSource.tv(id, season, episode)
+      : initialSource.movie(id);
+
+    const serverBtns = sources.map((s, i) =>
+      `<button class="server-btn ${i === activeIndex ? 'active' : ''}" data-index="${i}">${s.name}</button>`
     ).join('');
+
+    const initialMediaHTML = initialSource.type === 'html5'
+      ? `<video id="player-video" controls autoplay style="width:100%;height:100%;object-fit:contain;background:#000" src="${initialUrl}"></video>`
+      : `<iframe id="player-iframe" src="${initialUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; fullscreen" referrerpolicy="no-referrer"></iframe>`;
 
     container.innerHTML = `
       <div class="player-page">
@@ -87,14 +120,14 @@ export async function renderPlayer(container, params) {
           </div>
         </div>
 
-        <div class="player-video-container">
-          <iframe id="player-iframe" src="${embedUrl}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; fullscreen" referrerpolicy="no-referrer"></iframe>
+        <div class="player-video-container" id="video-container">
+          ${initialMediaHTML}
           <button class="skip-intro-btn" id="skip-intro-btn">Skip Intro ▸▸</button>
         </div>
 
         <div class="player-controls">
           <div class="server-selector">
-            <span style="color:var(--text-muted);font-size:.85rem;margin-right:8px">Source:</span>
+            <span style="color:var(--text-muted);font-size:.85rem;margin-right:8px;font-weight:600">Servers:</span>
             ${serverBtns}
           </div>
           ${type === 'tv' ? `
@@ -102,6 +135,10 @@ export async function renderPlayer(container, params) {
             <button class="btn btn-info ep-prev" ${episode <= 1 ? 'disabled' : ''}>← Prev Episode</button>
             <button class="btn btn-red ep-next">Next Episode →</button>
           </div>` : ''}
+        </div>
+
+        <div class="server-tip-banner" style="padding:10px 4%;background:rgba(229,9,20,0.08);border-bottom:1px solid rgba(229,9,20,0.2);font-size:0.85rem;color:#ddd;display:flex;align-items:center;gap:10px;">
+          <span>💡 <strong>Tip:</strong> If a streaming server is slow or blocked by your adblocker/ISP, switch between <strong>Server 1 - 9</strong>, or choose <strong>🎬 Official Trailer</strong> / <strong>⚡ Direct Demo Stream</strong> for instant playback!</span>
         </div>
 
         ${type === 'tv' ? `
@@ -122,7 +159,7 @@ export async function renderPlayer(container, params) {
             ${data.runtime ? `<span>${Math.floor(data.runtime/60)}h ${data.runtime%60}m</span>` : ''}
             ${data.number_of_seasons ? `<span>${data.number_of_seasons} Seasons</span>` : ''}
           </div>
-          <p style="color:var(--text);line-height:1.6;margin-top:.75rem;max-width:800px">${data.overview}</p>
+          <p style="color:var(--text);line-height:1.6;margin-top:.75rem;max-width:800px">${data.overview || ''}</p>
           <div class="modal-genres" style="margin-top:1rem">${(data.genres||[]).map(g => `<span class="genre-tag">${g.name}</span>`).join('')}</div>
         </div>
       </div>`;
@@ -141,16 +178,29 @@ export async function renderPlayer(container, params) {
       });
     }
 
-    // Server switching
+    // Dynamic Server switching (HTML5 vs iframe support)
+    const videoContainer = document.getElementById('video-container');
     container.querySelectorAll('.server-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index);
+        const source = sources[idx];
         const url = type === 'tv'
-          ? EMBED_SOURCES[idx].tv(id, season, episode)
-          : EMBED_SOURCES[idx].movie(id);
-        document.getElementById('player-iframe').src = url;
+          ? source.tv(id, season, episode)
+          : source.movie(id);
+
+        if (source.type === 'html5') {
+          videoContainer.innerHTML = `
+            <video id="player-video" controls autoplay style="width:100%;height:100%;object-fit:contain;background:#000" src="${url}"></video>
+            <button class="skip-intro-btn visible" id="skip-intro-btn">Skip Intro ▸▸</button>`;
+        } else {
+          videoContainer.innerHTML = `
+            <iframe id="player-iframe" src="${url}" frameborder="0" allowfullscreen allow="autoplay; encrypted-media; fullscreen" referrerpolicy="no-referrer"></iframe>
+            <button class="skip-intro-btn" id="skip-intro-btn">Skip Intro ▸▸</button>`;
+        }
+
         container.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        showToast(`Switched to ${source.name}`, 'info');
       });
     });
 
@@ -189,7 +239,7 @@ export async function renderPlayer(container, params) {
     container.innerHTML = `
       <div class="player-page" style="display:flex;align-items:center;justify-content:center;min-height:80vh">
         <div style="text-align:center">
-          <p style="font-size:1.2rem;margin-bottom:1rem">Failed to load</p>
+          <p style="font-size:1.2rem;margin-bottom:1rem">Failed to load content details</p>
           <button class="btn btn-red" onclick="history.back()">Go Back</button>
         </div>
       </div>`;
