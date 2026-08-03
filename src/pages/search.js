@@ -169,7 +169,7 @@ async function doSearch(query) {
     results = results.filter(i => i.poster_path);
     if (!results.length) { resultsEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem">No results found</p>'; return; }
     resultsEl.innerHTML = results.map(i => renderCard(i)).join('');
-    attachCardListeners(resultsEl.parentElement);
+    attachCardListeners(resultsEl);
   } catch {
     resultsEl.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:2rem">Search failed. Check your API key.</p>';
   }

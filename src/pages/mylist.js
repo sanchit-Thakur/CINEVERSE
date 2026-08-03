@@ -33,6 +33,13 @@ export function renderMyList(container) {
       openModal(parseInt(card.dataset.id), card.dataset.type);
     });
   });
+  container.querySelectorAll('.card-btn-play').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const type = btn.dataset.type;
+      window.location.hash = `#/watch/${type}/${id}${type === 'tv' ? '/1/1' : ''}`;
+    });
+  });
   container.querySelectorAll('.card-btn-list').forEach(btn => {
     btn.addEventListener('click', () => {
       removeFromList(parseInt(btn.dataset.id));

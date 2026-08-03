@@ -97,12 +97,12 @@ export async function renderBrowse(container) {
         ${renderRow('📺 TV Shows', getSampleData('tvPopular').results, 'tv')}
       </div>
       ${renderFooter()}`;
-    attachCardListeners(container);
+    attachCardListeners(container, true);
   }
 }
 
-export function attachCardListeners(container) {
-  const useSample = !hasTMDBKey();
+export function attachCardListeners(container, forceSample = false) {
+  const useSample = forceSample || !hasTMDBKey();
   container.querySelectorAll('.movie-card').forEach(card => {
     card.addEventListener('click', e => {
       if (e.target.closest('.card-btn')) return;

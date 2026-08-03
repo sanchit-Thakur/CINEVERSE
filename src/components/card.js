@@ -11,7 +11,7 @@ export function renderCard(item) {
 
   return `
     <div class="movie-card" data-id="${item.id}" data-type="${type}">
-      <img src="${img}" alt="${title}" loading="lazy" />
+      <img src="${img || 'https://via.placeholder.com/342x513/141414/666?text=No+Poster'}" alt="${title}" loading="lazy" onerror="this.onerror=null;this.src='https://via.placeholder.com/342x513/141414/666?text=No+Poster'" />
       <div class="card-overlay">
         <div class="card-title">${title}</div>
         <div class="card-meta">

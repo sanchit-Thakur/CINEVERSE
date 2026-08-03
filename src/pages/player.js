@@ -6,14 +6,16 @@ import { addToContinueWatching } from '../utils/continue-watching.js';
 // Multiple streaming servers & fallbacks for movie and TV playback
 const BASE_SERVERS = [
   { id: 'vidsrc-cc', name: 'Server 1 (VidSrc CC)', type: 'iframe', movie: (id) => `https://vidsrc.cc/v2/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` },
-  { id: 'vidsrc-pro', name: 'Server 2 (VidSrc Pro)', type: 'iframe', movie: (id) => `https://vidsrc.pro/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}` },
-  { id: 'vidsrc-vip', name: 'Server 3 (VidSrc VIP)', type: 'iframe', movie: (id) => `https://vidsrc.vip/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.vip/embed/tv/${id}/${s}/${e}` },
-  { id: 'vidsrc-in', name: 'Server 4 (VidSrc IN)', type: 'iframe', movie: (id) => `https://vidsrc.in/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.in/embed/tv/${id}/${s}/${e}` },
-  { id: 'vidsrc-xyz', name: 'Server 5 (VidSrc XYZ)', type: 'iframe', movie: (id) => `https://vidsrc.xyz/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
-  { id: 'embed-su', name: 'Server 6 (Embed SU)', type: 'iframe', movie: (id) => `https://embed.su/embed/movie/${id}`, tv: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
-  { id: 'autoembed', name: 'Server 7 (AutoEmbed)', type: 'iframe', movie: (id) => `https://player.autoembed.cc/embed/movie/${id}`, tv: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
-  { id: 'smashy', name: 'Server 8 (Smashy)', type: 'iframe', movie: (id) => `https://player.smashy.stream/movie/${id}`, tv: (id, s, e) => `https://player.smashy.stream/tv/${id}?s=${s}&e=${e}` },
-  { id: 'multiembed', name: 'Server 9 (MultiEmbed)', type: 'iframe', movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`, tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` },
+  { id: 'vidsrc-me', name: 'Server 2 (VidSrc Me)', type: 'iframe', movie: (id) => `https://vidsrc.me/embed/movie?tmdb=${id}`, tv: (id, s, e) => `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` },
+  { id: 'vidsrc-pro', name: 'Server 3 (VidSrc Pro)', type: 'iframe', movie: (id) => `https://vidsrc.pro/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.pro/embed/tv/${id}/${s}/${e}` },
+  { id: 'embed-su', name: 'Server 4 (Embed SU)', type: 'iframe', movie: (id) => `https://embed.su/embed/movie/${id}`, tv: (id, s, e) => `https://embed.su/embed/tv/${id}/${s}/${e}` },
+  { id: '2embed', name: 'Server 5 (2Embed)', type: 'iframe', movie: (id) => `https://www.2embed.skin/embed/movie/${id}`, tv: (id, s, e) => `https://www.2embed.skin/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-vip', name: 'Server 6 (VidSrc VIP)', type: 'iframe', movie: (id) => `https://vidsrc.vip/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.vip/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-in', name: 'Server 7 (VidSrc IN)', type: 'iframe', movie: (id) => `https://vidsrc.in/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.in/embed/tv/${id}/${s}/${e}` },
+  { id: 'vidsrc-xyz', name: 'Server 8 (VidSrc XYZ)', type: 'iframe', movie: (id) => `https://vidsrc.xyz/embed/movie/${id}`, tv: (id, s, e) => `https://vidsrc.xyz/embed/tv/${id}/${s}/${e}` },
+  { id: 'autoembed', name: 'Server 9 (AutoEmbed)', type: 'iframe', movie: (id) => `https://player.autoembed.cc/embed/movie/${id}`, tv: (id, s, e) => `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}` },
+  { id: 'smashy', name: 'Server 10 (Smashy)', type: 'iframe', movie: (id) => `https://player.smashy.stream/movie/${id}`, tv: (id, s, e) => `https://player.smashy.stream/tv/${id}?s=${s}&e=${e}` },
+  { id: 'multiembed', name: 'Server 11 (MultiEmbed)', type: 'iframe', movie: (id) => `https://multiembed.mov/?video_id=${id}&tmdb=1`, tv: (id, s, e) => `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` },
 ];
 
 export async function renderPlayer(container, params) {
