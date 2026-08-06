@@ -44,17 +44,17 @@ async function sendMessage() {
   if (!text) return;
   input.value = '';
   messages.push({ role: 'user', text });
+  messages.push({ role: 'bot typing', text: 'Thinking... 💭' });
   renderMessages();
 
   try {
     const reply = await getAIRecommendation(text);
+    messages.pop();
     messages.push({ role: 'bot', text: reply });
   } catch (err) {
-    if (err.message.includes('not set')) {
-      messages.push({ role: 'bot', text: '⚙️ Please set your Gemini API key in Settings first!' });
-    } else {
-      messages.push({ role: 'bot', text: 'Sorry, I had trouble thinking. Try again!' });
-    }
+    messages.pop();
+    console.error('AI Chat Error:', err);
+    messages.push({ role: 'bot', text: 'Sorry, I had trouble thinking. Please try again!' });
   }
   renderMessages();
 }

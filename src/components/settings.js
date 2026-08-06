@@ -70,9 +70,6 @@ export function openSettings(tab = 'account') {
             <button class="settings-nav-item" data-tab="playback">
               <span class="nav-icon">🎬</span> Playback & Quality
             </button>
-            <button class="settings-nav-item" data-tab="api">
-              <span class="nav-icon">🔑</span> API Keys & AI
-            </button>
             <button class="settings-nav-item" data-tab="storage">
               <span class="nav-icon">🧹</span> App Data & Storage
             </button>
@@ -182,46 +179,7 @@ export function openSettings(tab = 'account') {
               </div>
             </div>
 
-            <!-- TAB 3: API KEYS & AI -->
-            <div class="settings-tab-panel" id="tab-api">
-              <div class="settings-section">
-                <h3 class="settings-section-title">TMDB API Key</h3>
-                <p class="settings-desc">Powers live movie metadata, trending titles, trailers & posters.</p>
-                <div class="settings-field">
-                  <div class="input-with-badge">
-                    <input type="text" id="tmdb-key-input" value="${settings.tmdbKey}" placeholder="e.g. 1a2b3c4d5e..." />
-                    <span class="api-status-badge ${settings.tmdbKey ? 'active' : ''}">
-                      ${settings.tmdbKey ? '✓ Key Configured' : '⚠️ Missing Key'}
-                    </span>
-                  </div>
-                  <a href="https://www.themoviedb.org/settings/api" target="_blank" class="api-link">🔑 Get Free TMDB API Key →</a>
-                </div>
-              </div>
 
-              <div class="settings-section">
-                <h3 class="settings-section-title">AI Assistant API Key (NVIDIA / Gemini)</h3>
-                <p class="settings-desc">Enables CineBot AI conversational recommendations & movie analysis.</p>
-                <div class="settings-field">
-                  <div class="input-with-badge">
-                    <input type="text" id="gemini-key-input" value="${settings.geminiKey}" placeholder="e.g. nvapi-... or AIzaSy..." />
-                    <span class="api-status-badge ${settings.geminiKey ? 'active' : ''}">
-                      ${settings.geminiKey ? '✓ AI Key Active' : '⚠️ Demo Mode'}
-                    </span>
-                  </div>
-                  <a href="https://build.nvidia.com/" target="_blank" class="api-link">🤖 NVIDIA / Gemini API Hub →</a>
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h3 class="settings-section-title">Google Sign-In Client ID</h3>
-                <p class="settings-desc">Optional Google OAuth Client ID for real One-Tap Google authentication.</p>
-                <div class="settings-field">
-                  <input type="text" id="google-client-id-input" value="${settings.googleClientId}" placeholder="e.g. xxxxx.apps.googleusercontent.com" />
-                </div>
-              </div>
-
-              <button type="button" class="btn btn-outline" id="btn-test-apis">🧪 Test API Connections</button>
-            </div>
 
             <!-- TAB 4: APP DATA & STORAGE -->
             <div class="settings-tab-panel" id="tab-storage">
@@ -396,9 +354,9 @@ function attachSettingsListeners() {
     const autoplayNext = document.getElementById('setting-autoplay-next')?.checked ?? true;
     const autoplayPreviews = document.getElementById('setting-autoplay-previews')?.checked ?? true;
     const subtitleLang = document.getElementById('setting-subtitle-lang')?.value || 'en';
-    const tmdbKey = document.getElementById('tmdb-key-input')?.value.trim() || '';
-    const geminiKey = document.getElementById('gemini-key-input')?.value.trim() || '';
-    const googleClientId = document.getElementById('google-client-id-input')?.value.trim() || '';
+    const tmdbKey = document.getElementById('tmdb-key-input')?.value.trim() ?? (getAppSettings().tmdbKey || '');
+    const geminiKey = document.getElementById('gemini-key-input')?.value.trim() ?? (getAppSettings().geminiKey || '');
+    const googleClientId = document.getElementById('google-client-id-input')?.value.trim() ?? (getAppSettings().googleClientId || '');
 
     saveAppSettings({
       quality,

@@ -1,7 +1,11 @@
 const DEFAULT_KEY = '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';
 
 function getKey() {
-  return localStorage.getItem('gemini_api_key') || localStorage.getItem('nvidia_api_key') || DEFAULT_KEY;
+  const stored = localStorage.getItem('gemini_api_key') || localStorage.getItem('nvidia_api_key');
+  if (stored && (stored.startsWith('nvapi-') || stored.startsWith('AIza'))) {
+    return stored;
+  }
+  return DEFAULT_KEY;
 }
 
 export async function askGemini(prompt) {
@@ -16,13 +20,16 @@ export async function askGemini(prompt) {
         'Authorization': `Bearer ${key}`
       },
       body: JSON.stringify({
-        model: 'meta/llama-3.1-70b-instruct',
+        model: 'meta/llama-3.1-8b-instruct',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 1024
       })
     });
-    if (!res.ok) throw new Error(`NVIDIA AI error: ${res.status}`);
+    if (!res.ok) {
+      console.error('NVIDIA AI error:', res.status, await res.text());
+      throw new Error(`NVIDIA AI error: ${res.status}`);
+    }
     const data = await res.json();
     return data.choices?.[0]?.message?.content || 'No response';
   } else {
@@ -35,7 +42,10 @@ export async function askGemini(prompt) {
         generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
       })
     });
-    if (!res.ok) throw new Error(`Gemini error: ${res.status}`);
+    if (!res.ok) {
+      console.error('Gemini error:', res.status, await res.text());
+      throw new Error(`Gemini error: ${res.status}`);
+    }
     const data = await res.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response';
   }
