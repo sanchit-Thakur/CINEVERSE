@@ -11,7 +11,7 @@ export function getAppSettings() {
     subtitleStyle: 'yellow',
     audioLang: 'original',
     tmdbKey: localStorage.getItem('tmdb_api_key') || '',
-    geminiKey: localStorage.getItem('gemini_api_key') || '',
+    geminiKey: localStorage.getItem('gemini_api_key') || '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',
     googleClientId: localStorage.getItem('google_client_id') || ''
   };
   try {
@@ -199,16 +199,16 @@ export function openSettings(tab = 'account') {
               </div>
 
               <div class="settings-section">
-                <h3 class="settings-section-title">Gemini AI API Key</h3>
+                <h3 class="settings-section-title">AI Assistant API Key (NVIDIA / Gemini)</h3>
                 <p class="settings-desc">Enables CineBot AI conversational recommendations & movie analysis.</p>
                 <div class="settings-field">
                   <div class="input-with-badge">
-                    <input type="text" id="gemini-key-input" value="${settings.geminiKey}" placeholder="e.g. AIzaSy..." />
+                    <input type="text" id="gemini-key-input" value="${settings.geminiKey}" placeholder="e.g. nvapi-... or AIzaSy..." />
                     <span class="api-status-badge ${settings.geminiKey ? 'active' : ''}">
-                      ${settings.geminiKey ? '✓ AI Enabled' : '⚠️ Demo Mode'}
+                      ${settings.geminiKey ? '✓ AI Key Active' : '⚠️ Demo Mode'}
                     </span>
                   </div>
-                  <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">🤖 Get Free Gemini API Key →</a>
+                  <a href="https://build.nvidia.com/" target="_blank" class="api-link">🤖 NVIDIA / Gemini API Hub →</a>
                 </div>
               </div>
 
@@ -302,7 +302,7 @@ function attachSettingsListeners() {
   // Test APIs button
   document.getElementById('btn-test-apis')?.addEventListener('click', async () => {
     const tmdbKey = document.getElementById('tmdb-key-input').value.trim();
-    const geminiKey = document.getElementById('gemini-key-input').value.trim();
+    const aiKey = document.getElementById('gemini-key-input').value.trim();
     const status = document.getElementById('settings-status');
 
     status.className = 'settings-status info';
@@ -316,17 +316,39 @@ function attachSettingsListeners() {
       } catch {}
     }
 
-    if (tmdbKey && tmdbOk) {
+    let aiOk = false;
+    if (aiKey) {
+      try {
+        if (aiKey.startsWith('nvapi-')) {
+          const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${aiKey}` },
+            body: JSON.stringify({ model: 'meta/llama-3.1-70b-instruct', messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 })
+          });
+          if (res.ok) aiOk = true;
+        } else {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${aiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: 'hi' }] }] })
+          });
+          if (res.ok) aiOk = true;
+        }
+      } catch {}
+    }
+
+    const msgs = [];
+    if (tmdbKey) msgs.push(tmdbOk ? '✅ TMDB API Valid' : '❌ TMDB API Invalid');
+    if (aiKey) msgs.push(aiOk ? '✅ AI API (NVIDIA/Gemini) Valid' : '❌ AI API Invalid');
+
+    if ((!tmdbKey || tmdbOk) && (!aiKey || aiOk)) {
       status.className = 'settings-status success';
-      status.textContent = '✅ TMDB API Key is valid and working!';
-      showToast('TMDB API Connection Successful!', 'success');
-    } else if (tmdbKey && !tmdbOk) {
-      status.className = 'settings-status error';
-      status.textContent = '❌ TMDB API Key test failed. Please check key.';
-      showToast('TMDB API Key Invalid', 'error');
+      status.textContent = msgs.join(' | ') || '✅ Configuration valid!';
+      showToast('API Connection Successful!', 'success');
     } else {
-      status.className = 'settings-status success';
-      status.textContent = 'ℹ️ Default demo configuration ready.';
+      status.className = 'settings-status error';
+      status.textContent = msgs.join(' | ') || '❌ API Test Failed';
+      showToast('API Connection Failed', 'error');
     }
   });
 
