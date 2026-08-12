@@ -6,7 +6,7 @@
 [![Issues](https://img.shields.io/github/issues/sanchit-Thakur/CINEVERSE?style=for-the-badge&color=red)](https://github.com/sanchit-Thakur/CINEVERSE/issues)
 
 > **Explore the Universe of Cinema.** CINEVERSE is a feature-rich web application designed for movie enthusiasts to discover trending titles, search for favorites, view detailed media info, and curate personalized watchlists.
-
+ 
 ---
 
 ## 🌟 Visual Preview
